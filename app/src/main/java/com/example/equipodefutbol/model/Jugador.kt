@@ -1,13 +1,11 @@
 package com.example.equipodefutbol.model
 
-import com.google.gson.annotations.SerializedName
-
 data class Jugador(
-    @SerializedName("id_jugador") val idJugador: Int,
     val nombre: String,
     val posicion: String,
-    val dorsal: Int,
-    @SerializedName("fecha_nac") val fechaNac: String,
-    val nacionalidad: String,
-    @SerializedName("id_equipo") val idEquipo: Int
+    val dorsal: Int?,
+    val fechaNacimiento: String?, // El backend envía fechaNacimiento [cite: 161]
+    val nacionalidad: String?,
+    val equipoNombre: String?, // El backend envía el nombre del equipo [cite: 162]
+    val goles: Int? = null
 )

@@ -1,23 +1,29 @@
 package com.example.equipodefutbol.repository
 
+import com.example.equipodefutbol.model.Equipo
 import com.example.equipodefutbol.model.Jugador
 import com.example.equipodefutbol.model.PartidoDetalle
 import com.example.equipodefutbol.service.ApiService
 
 class FutbolRepository(private val apiService: ApiService) {
 
-    // Consulta 1: Jugadores por equipo
-    suspend fun obtenerJugadoresDeEquipo(id: Int): List<Jugador> {
-        return apiService.getJugadoresPorEquipo(id)
+    suspend fun obtenerJugadoresDeEquipo(equipoId: Int): List<Jugador> {
+        return apiService.getJugadoresPorEquipo(equipoId)
     }
 
-    // Consulta 2: Goleadores con filtro
-    suspend fun obtenerGoleadores(minimo: Int): List<Jugador> {
-        return apiService.getTopGoleadores(minimo)
+    suspend fun obtenerGoleadores(minGoles: Int): List<Jugador> {
+        return apiService.getTopGoleadores(minGoles)
     }
 
-    // Consulta 3: Resultados con nombres de equipos
     suspend fun obtenerResultadosPartidos(): List<PartidoDetalle> {
         return apiService.getResultadosPartidos()
+    }
+
+    suspend fun borrarEquipo(equipoId: Int) {
+        apiService.deleteEquipo(equipoId)
+    }
+
+    suspend fun insertarEquipo(equipo: Equipo) {
+        apiService.postEquipo(equipo)
     }
 }

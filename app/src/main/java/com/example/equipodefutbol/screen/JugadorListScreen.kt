@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,60 +20,106 @@ import com.example.equipodefutbol.viewmodel.FutbolViewModel
 @Composable
 fun JugadorListScreen(viewModel: FutbolViewModel, equipoId: Int) {
     val jugadores = viewModel.jugadoresEquipo.value
-
+    if (jugadores.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator() // Esto muestra el círculo de carga
+        }
+    } else {
     LaunchedEffect(equipoId) {
         viewModel.cargarJugadoresPorEquipo(equipoId)
     }
 
-    // Eliminamos el padding interno de aquí para que las tarjetas respiren mejor
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 16.dp) // Espacio al final de la lista
-    ) {
-        item {
-            Text(
-                text = "Plantilla del Equipo",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(16.dp)
+    Scaffold(
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { /* Aquí irá tu lógica de crear equipo */ },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Nuevo Equipo") },
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
 
-        items(jugadores) { jugador ->
-            // AQUÍ LLAMAMOS A LA FUNCIÓN PULIDA
-            JugadorCard(
-                nombre = jugador.nombre,
-                posicion = jugador.posicion,
-                dorsal = jugador.dorsal
-            )
+            // Fila de Botones de Acción
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Botón Borrar
+                Button(
+                    onClick = {
+                        // Llamamos a la función del ViewModel pasándole el ID del equipo actual
+                        viewModel.borrarEquipo(equipoId)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Borrar Equipo")
+                }
+
+                // Botón Refrescar
+                OutlinedButton(
+                    onClick = {
+                        // Volvemos a pedir los datos a la API
+                        viewModel.cargarJugadoresPorEquipo(equipoId)
+                    }
+                ) {
+                    Text("Refrescar")
+                }
+            }
+
+            // Lista de Jugadores
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp) // Espacio para el FAB
+            ) {
+                item {
+                    Text(
+                        text = "Plantilla del Equipo",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+
+                items(jugadores) { jugador ->
+                    JugadorCard(
+                        nombre = jugador.nombre,
+                        posicion = jugador.posicion,
+                        dorsal = jugador.dorsal,
+                        nacionalidad = jugador.nacionalidad
+                    )
+                }
+                }
+            }
         }
     }
 }
 
-// ESTA FUNCIÓN VA AFUERA, como una función independiente
 @Composable
-fun JugadorCard(nombre: String, posicion: String, dorsal: Int?, goles: Int? = null) {
+fun JugadorCard(
+    nombre: String,
+    posicion: String,
+    dorsal: Int?,
+    nacionalidad: String? = null,
+    goles: Int? = null
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Círculo con el número
             Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
+                modifier = Modifier.size(50.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -85,32 +133,20 @@ fun JugadorCard(nombre: String, posicion: String, dorsal: Int?, goles: Int? = nu
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = nombre,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = posicion,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(text = nombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(text = posicion, style = MaterialTheme.typography.bodyMedium)
+                if (nacionalidad != null) {
+                    Text(text = nacionalidad, style = MaterialTheme.typography.labelSmall)
+                }
             }
 
             if (goles != null) {
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = goles.toString(),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Goles",
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
+                Text(
+                    text = "$goles G",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

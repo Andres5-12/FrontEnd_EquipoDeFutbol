@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
                     Surface(modifier = Modifier.padding(innerPadding)) {
                         when (currentScreen) {
                             "jugadores" -> JugadorListScreen(viewModel = viewModel, equipoId = 1)
-                            "goleadores" -> GoleadoresScreen(viewModel = viewModel, minGoles = 5)
+                            "goleadores" -> GoleadoresScreen(viewModel = viewModel)
                             "partidos" -> PartidosScreen(viewModel = viewModel)
                         }
                     }

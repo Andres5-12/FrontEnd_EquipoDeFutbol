@@ -4,6 +4,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.equipodefutbol.model.Equipo
 import com.example.equipodefutbol.model.Jugador
 import com.example.equipodefutbol.model.PartidoDetalle
 import com.example.equipodefutbol.repository.FutbolRepository
@@ -22,6 +23,11 @@ class FutbolViewModel(private val repository: FutbolRepository) : ViewModel() {
     // Estado para la lista de partidos
     private val _partidos = mutableStateOf<List<PartidoDetalle>>(emptyList())
     val partidos: State<List<PartidoDetalle>> = _partidos
+
+    init {
+        cargarJugadoresPorEquipo(1) // Carga inicial de jugadores
+        cargarPartidos()            // <--- AGREGA ESTA LÍNEA AQUÍ
+    }
 
     // Función para cargar jugadores (Consulta 1)
     fun cargarJugadoresPorEquipo(id: Int) {
@@ -50,6 +56,29 @@ class FutbolViewModel(private val repository: FutbolRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 _partidos.value = repository.obtenerResultadosPartidos()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun borrarEquipo(id: Int) {
+        viewModelScope.launch {
+            try {
+                repository.borrarEquipo(id)
+                _jugadoresEquipo.value = emptyList()
+                cargarPartidos()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun crearEquipo(nuevoEquipo: Equipo) {
+        viewModelScope.launch {
+            try {
+                repository.insertarEquipo(nuevoEquipo)
+                                cargarPartidos()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

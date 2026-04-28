@@ -7,23 +7,27 @@ import com.example.equipodefutbol.service.ApiService
 
 class FutbolRepository(private val apiService: ApiService) {
 
-    suspend fun obtenerJugadoresDeEquipo(equipoId: Int): List<Jugador> {
-        return apiService.getJugadoresPorEquipo(equipoId)
+    suspend fun obtenerJugadoresDeEquipo(id: Int): List<Jugador> {
+        return apiService.getJugadoresPorEquipo(id)
     }
 
-    suspend fun obtenerGoleadores(minGoles: Int): List<Jugador> {
-        return apiService.getTopGoleadores(minGoles)
+    suspend fun obtenerGoleadores(Goles: Int): List<Jugador> {
+        return apiService.getTopGoleadores(Goles)
     }
 
     suspend fun obtenerResultadosPartidos(): List<PartidoDetalle> {
         return apiService.getResultadosPartidos()
     }
 
-    suspend fun borrarEquipo(equipoId: Int) {
-        apiService.deleteEquipo(equipoId)
+    suspend fun borrarEquipo(Id: Int) {
+        apiService.deleteEquipo(Id)
     }
 
     suspend fun insertarEquipo(equipo: Equipo) {
         apiService.postEquipo(equipo)
+    }
+
+    suspend fun obtenerEquipos(): List<Equipo> {
+        return apiService.getEquipos()
     }
 }

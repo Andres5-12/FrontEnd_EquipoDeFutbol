@@ -1,63 +1,70 @@
 package com.example.equipodefutbol.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.equipodefutbol.model.Equipo
 import com.example.equipodefutbol.model.Jugador
-import com.example.equipodefutbol.model.PartidoDetalle
+// REMOVIDO: El import de PartidoDetalle ya no se usa, esto quita el "Unused import directive"
 import com.example.equipodefutbol.repository.FutbolRepository
 import kotlinx.coroutines.launch
 
 class FutbolViewModel(private val repository: FutbolRepository) : ViewModel() {
 
-    // Estado para la lista de jugadores de un equipo
+    // --- ESTADOS ---
+
     private val _jugadoresEquipo = mutableStateOf<List<Jugador>>(emptyList())
     val jugadoresEquipo: State<List<Jugador>> = _jugadoresEquipo
 
-    // Estado para la consulta de goleadores
+    private val _equipoSeleccionado = mutableStateOf<Equipo?>(null)
+    val equipoSeleccionado: State<Equipo?> = _equipoSeleccionado
+
     private val _goleadores = mutableStateOf<List<Jugador>>(emptyList())
     val goleadores: State<List<Jugador>> = _goleadores
 
-    // Estado para la lista de partidos
-    private val _partidos = mutableStateOf<List<PartidoDetalle>>(emptyList())
-    val partidos: State<List<PartidoDetalle>> = _partidos
+    private val _listaEquipos = mutableStateOf<List<Equipo>>(emptyList())
+    val listaEquipos: State<List<Equipo>> = _listaEquipos
 
-    init {
-        cargarJugadoresPorEquipo(1) // Carga inicial de jugadores
-        cargarPartidos()            // <--- AGREGA ESTA LÍNEA AQUÍ
-    }
+    // --- FUNCIONES ---
 
-    // Función para cargar jugadores (Consulta 1)
-    fun cargarJugadoresPorEquipo(id: Int) {
+    fun cargarTodosLosEquipos() {
         viewModelScope.launch {
             try {
-                _jugadoresEquipo.value = repository.obtenerJugadoresDeEquipo(id)
+                val respuesta = repository.obtenerEquipos()
+                _listaEquipos.value = respuesta
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("API_ERROR", "Error al cargar lista de equipos: ${e.message}")
             }
         }
     }
 
-    // Función para cargar goleadores (Consulta 2)
+    fun cargarJugadoresPorEquipo(id: Int) {
+        viewModelScope.launch {
+            try {
+                val resultadoJugadores = repository.obtenerJugadoresDeEquipo(id)
+                _jugadoresEquipo.value = resultadoJugadores
+
+                val todosLosEquipos = repository.obtenerEquipos()
+                _equipoSeleccionado.value = todosLosEquipos.find { it.idEquipo == id }
+            } catch (e: Exception) {
+                Log.e("DEBUG_DATA", "Error en la petición: ${e.message}")
+            }
+        }
+    }
+
+    fun limpiarListaJugadores() {
+        _jugadoresEquipo.value = emptyList()
+        _equipoSeleccionado.value = null
+    }
+
     fun cargarGoleadores(minimo: Int) {
         viewModelScope.launch {
             try {
                 _goleadores.value = repository.obtenerGoleadores(minimo)
             } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    // Función para cargar todos los partidos (Consulta 3)
-    fun cargarPartidos() {
-        viewModelScope.launch {
-            try {
-                _partidos.value = repository.obtenerResultadosPartidos()
-            } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("API_ERROR", "Error: ${e.message}")
             }
         }
     }
@@ -66,21 +73,40 @@ class FutbolViewModel(private val repository: FutbolRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 repository.borrarEquipo(id)
-                _jugadoresEquipo.value = emptyList()
-                cargarPartidos()
+                cargarTodosLosEquipos()
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("API_ERROR", "Error al borrar: ${e.message}")
             }
         }
     }
 
-    fun crearEquipo(nuevoEquipo: Equipo) {
+    /**
+     * CORRECCIÓN: fundacion ahora es Int para evitar 'Argument type mismatch'
+     */
+    fun crearEquipoAutomatico(nombre: String, ciudad: String, fundacion: String) {
         viewModelScope.launch {
             try {
-                repository.insertarEquipo(nuevoEquipo)
-                                cargarPartidos()
+                val equiposExistentes = repository.obtenerEquipos()
+                val idsUsados = equiposExistentes.map { it.idEquipo }.toSet()
+
+                var nuevoId = 1
+                while (idsUsados.contains(nuevoId)) {
+                    nuevoId++
+                }
+
+                // El constructor de Equipo espera un Int en fundacion
+                val equipoConId = Equipo(
+                    idEquipo = nuevoId,
+                    nombre = nombre,
+                    ciudad = ciudad,
+                    fundacion = fundacion
+                )
+
+                repository.insertarEquipo(equipoConId)
+                cargarTodosLosEquipos()
+
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("API_ERROR", "Error al crear: ${e.message}")
             }
         }
     }

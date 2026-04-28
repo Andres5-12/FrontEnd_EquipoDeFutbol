@@ -13,25 +13,23 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
-    // 1. Obtener todos los jugadores de un equipo específico
-    @GET("api/jugadores/equipo/{id}")
-    suspend fun getJugadoresPorEquipo(@Path("id") equipoId: Int): List<Jugador>
+    @GET("api/jugadores/equipo/{equipoId}")
+    suspend fun getJugadoresPorEquipo(@Path("equipoId") equipoId: Int): List<Jugador>
 
-    // 2. Obtener los jugadores que han marcado más de X goles
     @GET("api/jugadores/goleadores")
     suspend fun getTopGoleadores(@Query("minGoles") goles: Int): List<Jugador>
 
-    // 3. Obtener los resultados de todos los partidos
-    @GET("api/partidos/resultados")
+    @GET("api/partidos/detalles")
     suspend fun getResultadosPartidos(): List<PartidoDetalle>
 
-    // 4. Borrar un equipo
     @DELETE("api/equipos/{id}")
-    suspend fun deleteEquipo(@Path("id") equipoId: Int): retrofit2.Response<Unit>
+    suspend fun deleteEquipo(@Path("id") id: Int): retrofit2.Response<Unit>
 
-    // 5. Insertar un equipo (NUEVA: Necesaria para que tu repositorio no de error)
     @POST("api/equipos")
     suspend fun postEquipo(@Body equipo: Equipo): retrofit2.Response<Unit>
+
+    @GET("api/equipos")
+    suspend fun getEquipos(): List<Equipo>
 }
 
 object RetrofitClient {
